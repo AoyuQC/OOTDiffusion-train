@@ -12,14 +12,6 @@ import argparse
 from utils.dataloader import VITONDataset,VITONDataLoader,make_train_dataset
 from safetensors.torch import save_file
 
-import debugpy
-
-debugpy.listen(5889)  # 5678 is port
-print("Waiting for debugger attach")
-debugpy.wait_for_client()
-debugpy.breakpoint()
-print('break on this line')
-
 def get_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--name', type=str, required=False)
@@ -175,26 +167,16 @@ from diffusers import UniPCMultistepScheduler,PNDMScheduler
 from accelerate import Accelerator
 from accelerate.utils import ProjectConfiguration, set_seed
 import torch.nn.functional as F
-# sys.path.append(r'/mmu-vcg-ssd/yichen/OOTDiffusion/ootd')
-sys.path.append(r'/home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion/ootd')
+sys.path.append(r'/mmu-vcg-ssd/yichen/OOTDiffusion/ootd')
 
 from pipelines_ootd.unet_vton_2d_condition import UNetVton2DConditionModel
 from pipelines_ootd.unet_garm_2d_condition import UNetGarm2DConditionModel
 
-ootd_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
-vit_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
-
-# VIT_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/clip-vit-large-patch14"
-# VAE_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd"
-# UNET_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd/ootd_hd/checkpoint-36000/"
-# MODEL_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd"
-# scheduler_path = '/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd/scheduler/scheduler_ootd_config.json'
-
-VIT_PATH = vit_base_path
-VAE_PATH = ootd_base_path
-UNET_PATH = f"{ootd_base_path}/ootd_hd/checkpoint-36000"
-MODEL_PATH = ootd_base_path
-scheduler_path = f'{ootd_base_path}/scheduler/scheduler_config.json'
+VIT_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/clip-vit-large-patch14"
+VAE_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd"
+UNET_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd/ootd_hd/checkpoint-36000/"
+MODEL_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd"
+scheduler_path = '/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd/scheduler/scheduler_ootd_config.json'
 
 vae = AutoencoderKL.from_pretrained(
             VAE_PATH,
@@ -204,14 +186,14 @@ vae = AutoencoderKL.from_pretrained(
 
 unet_garm = UNetGarm2DConditionModel.from_pretrained(
             UNET_PATH,
-            subfolder="unet_garm",
+            subfolder="unet_garm_train",
             torch_dtype=torch.float32,
             use_safetensors=True,
         )
 
 unet_vton = UNetVton2DConditionModel.from_pretrained(
             UNET_PATH,
-            subfolder="unet_vton",
+            subfolder="unet_vton_train",
             torch_dtype=torch.float32,
             use_safetensors=True,
         )
@@ -557,7 +539,7 @@ for epoch in tqdm(range(first_epoch, args.num_train_epochs)):
 
 
             # with accelerator.autocast():
-            util_adv_loss = torch.nn.functional.softplus(-sample[0]).mean() * 0 
+            util_adv_loss = torch.nn.functional.softplus(-sample).mean() * 0 
             loss = F.mse_loss(noise_pred.float(), noise.float(), reduction="mean")+util_adv_loss
             
             print(loss.item())
