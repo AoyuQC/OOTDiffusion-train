@@ -12,13 +12,16 @@ import argparse
 from utils.dataloader import VITONDataset,VITONDataLoader,make_train_dataset
 from safetensors.torch import save_file
 
-import debugpy
+try:
+    import debugpy
 
-debugpy.listen(5889)  # 5678 is port
-print("Waiting for debugger attach")
-debugpy.wait_for_client()
-debugpy.breakpoint()
-print('break on this line')
+    debugpy.listen(5889)  # 5678 is port
+    print("Waiting for debugger attach")
+    debugpy.wait_for_client()
+    debugpy.breakpoint()
+    print('break on this line')
+except:
+    print("non debug mode")
 
 def get_opt():
     parser = argparse.ArgumentParser()
@@ -176,13 +179,21 @@ from accelerate import Accelerator
 from accelerate.utils import ProjectConfiguration, set_seed
 import torch.nn.functional as F
 # sys.path.append(r'/mmu-vcg-ssd/yichen/OOTDiffusion/ootd')
-sys.path.append(r'/home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion/ootd')
+# g5 instance
+# sys.path.append(r'/home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion/ootd')
+# a100 instance
+sys.path.append(r'/home/ec2-user/SageMaker/vto/OOTDiffusion/ootd')
 
 from pipelines_ootd.unet_vton_2d_condition import UNetVton2DConditionModel
 from pipelines_ootd.unet_garm_2d_condition import UNetGarm2DConditionModel
 
-ootd_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
-vit_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
+# # g5 instance
+# ootd_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
+# vit_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
+
+# a100 instance
+ootd_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
+vit_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
 
 # VIT_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/clip-vit-large-patch14"
 # VAE_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd"
