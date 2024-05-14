@@ -12,16 +12,16 @@ import argparse
 from utils.dataloader import VITONDataset,VITONDataLoader,make_train_dataset
 from safetensors.torch import save_file
 
-try:
-    import debugpy
+# try:
+#     import debugpy
 
-    debugpy.listen(5889)  # 5678 is port
-    print("Waiting for debugger attach")
-    debugpy.wait_for_client()
-    debugpy.breakpoint()
-    print('break on this line')
-except:
-    print("non debug mode")
+#     debugpy.listen(5889)  # 5678 is port
+#     print("Waiting for debugger attach")
+#     debugpy.wait_for_client()
+#     debugpy.breakpoint()
+#     print('break on this line')
+# except:
+#     print("non debug mode")
 
 def get_opt():
     parser = argparse.ArgumentParser()
@@ -112,7 +112,7 @@ def get_opt():
     parser.add_argument(
         "--mixed_precision",
         type=str,
-        default=None,
+        default="fp16",
         choices=["no", "fp16", "bf16"],
         help=(
             "Whether to use mixed precision. Choose between fp16 and bf16 (bfloat16). Bf16 requires PyTorch >="
@@ -180,20 +180,20 @@ from accelerate.utils import ProjectConfiguration, set_seed
 import torch.nn.functional as F
 # sys.path.append(r'/mmu-vcg-ssd/yichen/OOTDiffusion/ootd')
 # g5 instance
-# sys.path.append(r'/home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion/ootd')
-# a100 instance
-sys.path.append(r'/home/ec2-user/SageMaker/vto/OOTDiffusion/ootd')
+sys.path.append(r'/home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion/ootd')
+# # a100 instance
+# sys.path.append(r'/home/ec2-user/SageMaker/vto/OOTDiffusion/ootd')
 
 from pipelines_ootd.unet_vton_2d_condition import UNetVton2DConditionModel
 from pipelines_ootd.unet_garm_2d_condition import UNetGarm2DConditionModel
 
-# # g5 instance
-# ootd_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
-# vit_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
+# g5 instance
+ootd_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
+vit_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
 
-# a100 instance
-ootd_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
-vit_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
+# # a100 instance
+# ootd_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
+# vit_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
 
 # VIT_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/clip-vit-large-patch14"
 # VAE_PATH = "/mmu-vcg-ssd/yichen/OOTDiffusion/checkpoints/ootd"
@@ -302,6 +302,32 @@ optimizer = optimizer_class(
         weight_decay=args.adam_weight_decay,
         eps=args.adam_epsilon,
     )
+
+from accelerate.utils import DummyOptim
+from accelerate.utils import DummyScheduler
+# Creates Dummy Optimizer if `optimizer` was spcified in the config file else creates Adam Optimizer
+optimizer_cls = (
+    torch.optim.AdamW
+    if accelerator.state.deepspeed_plugin is None
+    or "optimizer" not in accelerator.state.deepspeed_plugin.deepspeed_config
+    else DummyOptim
+)
+optimizer = optimizer_cls(params_to_optimize, lr=args.learning_rate)
+
+if (
+    accelerator.state.deepspeed_plugin is None
+    or "scheduler" not in accelerator.state.deepspeed_plugin.deepspeed_config
+):
+    lr_scheduler = get_scheduler(
+        name=args.lr_scheduler_type,
+        optimizer=optimizer,
+        num_warmup_steps=args.num_warmup_steps,
+        num_training_steps=args.max_train_steps,
+    )
+else:
+    lr_scheduler = DummyScheduler(
+        optimizer, total_num_steps=args.max_train_steps, warmup_num_steps=args.lr_warmup_steps
+    )
 #######单机多卡
 # params_to_optimize = list(unet_garm.parameters())
 # optimizer = optimizer_class(
@@ -320,14 +346,14 @@ if args.max_train_steps is None:
     args.max_train_steps = args.num_train_epochs * num_update_steps_per_epoch
     overrode_max_train_steps = True
 
-lr_scheduler = get_scheduler(
-        args.lr_scheduler,
-        optimizer=optimizer,
-        num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
-        num_training_steps=args.max_train_steps * accelerator.num_processes,
-        num_cycles=args.lr_num_cycles,
-        power=args.lr_power,
-    )
+# lr_scheduler = get_scheduler(
+#         args.lr_scheduler,
+#         optimizer=optimizer,
+#         num_warmup_steps=args.lr_warmup_steps * accelerator.num_processes,
+#         num_training_steps=args.max_train_steps * accelerator.num_processes,
+#         num_cycles=args.lr_num_cycles,
+#         power=args.lr_power,
+#     )
 
 # if accelerator.state.deepspeed_plugin is not None:
 #   kwargs = {
@@ -352,8 +378,6 @@ unet_ = Unet_(unet_vton, unet_garm)
 unet_ ,optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
         unet_, optimizer, train_dataloader, lr_scheduler
     )
-
-
 
 # unet_garm,unet_vton,optimizer, train_dataloader,test_loader, lr_scheduler = accelerator.prepare(
 #          unet_garm,unet_vton,optimizer, train_dataloader, test_loader,lr_scheduler
