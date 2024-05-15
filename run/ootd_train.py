@@ -296,20 +296,21 @@ accelerator = Accelerator(
     
     )
 
-optimizer_class = torch.optim.AdamW
-######单机单卡
-params_to_optimize = list(unet_garm.parameters()) + list(unet_vton.parameters())
-optimizer = optimizer_class(
-        params_to_optimize,
-        lr=args.learning_rate,
-        betas=(args.adam_beta1, args.adam_beta2),
-        weight_decay=args.adam_weight_decay,
-        eps=args.adam_epsilon,
-    )
+# optimizer_class = torch.optim.AdamW
+# ######单机单卡
+# params_to_optimize = list(unet_garm.parameters()) + list(unet_vton.parameters())
+# optimizer = optimizer_class(
+#         params_to_optimize,
+#         lr=args.learning_rate,
+#         betas=(args.adam_beta1, args.adam_beta2),
+#         weight_decay=args.adam_weight_decay,
+#         eps=args.adam_epsilon,
+#     )
 
 from accelerate.utils import DummyOptim
 from accelerate.utils import DummyScheduler
 # Creates Dummy Optimizer if `optimizer` was spcified in the config file else creates Adam Optimizer
+params_to_optimize = list(unet_garm.parameters()) + list(unet_vton.parameters())
 optimizer_cls = (
     torch.optim.AdamW
     if accelerator.state.deepspeed_plugin is None
