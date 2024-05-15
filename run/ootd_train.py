@@ -1,21 +1,21 @@
 # # debug settings
-# try:
-#     import debugpy
-
-#     debugpy.listen(5889)  # 5678 is port
-#     print("Waiting for debugger attach")
-#     debugpy.wait_for_client()
-#     debugpy.breakpoint()
-#     print('break on this line')
-# except:
-#     print("non debug mode")
-
 # change settings between a10 and a100
 import torch
 import sys
+
 device_name = torch.cuda.get_device_name()
 if device_name == 'NVIDIA A10G':
     # g5 instance
+    try:
+        import debugpy
+
+        debugpy.listen(5889)  # 5678 is port
+        print("Waiting for debugger attach")
+        debugpy.wait_for_client()
+        debugpy.breakpoint()
+        print('break on this line')
+    except:
+        print("non debug mode")
     sys.path.append(r'/home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion/ootd')
     ootd_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
     vit_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
@@ -139,7 +139,7 @@ def get_opt():
     parser.add_argument(
         "--report_to",
         type=str,
-        default="tensorboard",
+        default="wandb",
         help=(
             'The integration to report the results and logs to. Supported platforms are `"tensorboard"`'
             ' (default), `"wandb"` and `"comet_ml"`. Use `"all"` to report to all integrations.'
@@ -289,9 +289,9 @@ logging_dir = Path(args.output_dir, args.logging_dir)
 accelerator_project_config = ProjectConfiguration(project_dir=args.output_dir, logging_dir=logging_dir)
 
 accelerator = Accelerator(
+        log_with=args.report_to,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
-        log_with=args.report_to,
         project_config=accelerator_project_config,
     
     )
