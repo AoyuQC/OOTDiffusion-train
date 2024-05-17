@@ -6,16 +6,16 @@ import sys
 device_name = torch.cuda.get_device_name()
 if device_name == 'NVIDIA A10G':
     # g5 instance
-    try:
-        import debugpy
+    # try:
+    #     import debugpy
 
-        debugpy.listen(5889)  # 5678 is port
-        print("Waiting for debugger attach")
-        debugpy.wait_for_client()
-        debugpy.breakpoint()
-        print('break on this line')
-    except:
-        print("non debug mode")
+    #     debugpy.listen(5889)  # 5678 is port
+    #     print("Waiting for debugger attach")
+    #     debugpy.wait_for_client()
+    #     debugpy.breakpoint()
+    #     print('break on this line')
+    # except:
+    #     print("non debug mode")
     sys.path.append(r'/home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion/ootd')
     ootd_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
     vit_base_path = "/home/ubuntu/dataset/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
@@ -454,10 +454,6 @@ image_logs = None
 for epoch in tqdm(range(first_epoch, args.num_train_epochs)):
     for step, batch in enumerate(train_dataloader):
         with accelerator.accumulate(unet_vton),accelerator.accumulate(unet_garm):
-        # with accelerator.accumulate(unet_vton):
-
-
-
             image_garm = batch['cloth']['paired'].to(accelerator.device).to(dtype=weight_dtype)
             image_vton = batch['img_agnostic'].to(accelerator.device).to(dtype=weight_dtype)
             image_ori = batch['img'].to(accelerator.device).to(dtype=weight_dtype)
@@ -610,17 +606,55 @@ for epoch in tqdm(range(first_epoch, args.num_train_epochs)):
             # progress_bar.update(7)#####单机多卡，每次增加卡的数量
             accelerator.log({"training_loss": loss}, step=step)
     if (epoch%100 == 0 and epoch != 0 ) or epoch == (args.num_train_epochs-1):
-        state_dict_unet_vton = unet_vton.state_dict()
-        for key in state_dict_unet_vton.keys():
-            state_dict_unet_vton[key] = state_dict_unet_vton[key].to('cpu')
-        save_file(state_dict_unet_vton, f"./ootd_train_checkpoints/unet_vton-epoch{str(epoch)}.safetensors")
-        # save_file(state_dict_unet_vton, f"./ootd_train_checkpoints/unet_vton.safetensors")
-        state_dict_unet_garm = unet_garm.state_dict()
-        for key in state_dict_unet_garm.keys():
-            state_dict_unet_garm[key] = state_dict_unet_garm[key].to('cpu')
-        save_file(state_dict_unet_garm,f"./ootd_train_checkpoints/unet_garm-epoch{str(epoch)}.safetensors")
-        # save_file(state_dict_unet_garm,f"./ootd_train_checkpoints/unet_garm.safetensors")                
-        print('checkpoints successful saved')
+        # state_dict_unet_vton = unet_vton.state_dict()
+        # for key in state_dict_unet_vton.keys():
+        #     state_dict_unet_vton[key] = state_dict_unet_vton[key].to('cpu')
+        # save_file(state_dict_unet_vton, f"./ootd_train_checkpoints/unet_vton-epoch{str(epoch)}.safetensors")
+        # # save_file(state_dict_unet_vton, f"./ootd_train_checkpoints/unet_vton.safetensors")
+        # state_dict_unet_garm = unet_garm.state_dict()
+        # for key in state_dict_unet_garm.keys():
+        #     state_dict_unet_garm[key] = state_dict_unet_garm[key].to('cpu')
+        # save_file(state_dict_unet_garm,f"./ootd_train_checkpoints/unet_garm-epoch{str(epoch)}.safetensors")
+        # # save_file(state_dict_unet_garm,f"./ootd_train_checkpoints/unet_garm.safetensors")                
+        # print('checkpoints successful saved')
+
+        # deepseed save model
+        import os
+        save_path = os.path.join("ootd_train_ds_checkpoints", f"checkpoint-split-epoch{str(epoch)}")
+        accelerator.save_state(save_path)
+        print("checkpoint deespeed saved")
+        
+        # # split save test
+        # accelerator.wait_for_everyone()
+        # unwrapped_model = accelerator.unwrap_model(unet_vton)
+
+        # New Code #
+        # Saves the whole/unpartitioned fp16 model when in ZeRO Stage-3 to the output directory if
+        # `stage3_gather_16bit_weights_on_model_save` is True in DeepSpeed Config file or
+        # `zero3_save_16bit_model` is True in DeepSpeed Plugin.
+        # For Zero Stages 1 and 2, models are saved as usual in the output directory.
+        # The model name saved is `pytorch_model.bin`
+        # accelerator.save(
+        #     unwrapped_model.state_dict(),
+        #     os.path.join("ootd_train_ds_sep_checkpoints", f"unet_vton-epoch{str(epoch)}.safetensors"),
+        # )
+
+        # unwrapped_model = accelerator.unwrap_model(unet_garm)
+
+        # accelerator.save(
+        #     unwrapped_model.state_dict(),
+        #     os.path.join("ootd_train_ds_sep_checkpoints", f"unet_garm-epoch{str(epoch)}.safetensors"),
+        # )
+
+        # # save pretrain
+        # accelerator.get_state_dict(unet_vton)
+        # unwrapped_model = accelerator.unwrap_model(unet_vton)
+        # save_fun = accelerator.save
+        # unwrapped_model.sve_pretrained(
+        #     "ootd_train_ds_pretrain",
+        #     is_main_process=accelerator.is_main_process,
+        #     save_function=save_fun
+        # )
 accelerator.end_training()
 # from safetensors.torch import save_file
 # save_file(unet_vton.to('cpu').state_dict(), "./unet_vton.safetensors")
