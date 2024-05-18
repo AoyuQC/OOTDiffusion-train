@@ -296,6 +296,11 @@ accelerator = Accelerator(
     
     )
 
+accelerator.init_trackers(
+    project_name="ootd-vto", 
+    config={"dropout": 0.1, "learning_rate": 1e-2}
+)
+
 # optimizer_class = torch.optim.AdamW
 # ######单机单卡
 # params_to_optimize = list(unet_garm.parameters()) + list(unet_vton.parameters())
@@ -606,55 +611,15 @@ for epoch in tqdm(range(first_epoch, args.num_train_epochs)):
             # progress_bar.update(7)#####单机多卡，每次增加卡的数量
             accelerator.log({"training_loss": loss}, step=step)
     if (epoch%100 == 0 and epoch != 0 ) or epoch == (args.num_train_epochs-1):
-        # state_dict_unet_vton = unet_vton.state_dict()
-        # for key in state_dict_unet_vton.keys():
-        #     state_dict_unet_vton[key] = state_dict_unet_vton[key].to('cpu')
-        # save_file(state_dict_unet_vton, f"./ootd_train_checkpoints/unet_vton-epoch{str(epoch)}.safetensors")
-        # # save_file(state_dict_unet_vton, f"./ootd_train_checkpoints/unet_vton.safetensors")
-        # state_dict_unet_garm = unet_garm.state_dict()
-        # for key in state_dict_unet_garm.keys():
-        #     state_dict_unet_garm[key] = state_dict_unet_garm[key].to('cpu')
-        # save_file(state_dict_unet_garm,f"./ootd_train_checkpoints/unet_garm-epoch{str(epoch)}.safetensors")
-        # # save_file(state_dict_unet_garm,f"./ootd_train_checkpoints/unet_garm.safetensors")                
-        # print('checkpoints successful saved')
-
         # deepseed save model
         import os
         save_path = os.path.join("ootd_train_ds_checkpoints", f"checkpoint-split-epoch{str(epoch)}")
         accelerator.save_state(save_path)
         print("checkpoint deespeed saved")
         
-        # # split save test
-        # accelerator.wait_for_everyone()
-        # unwrapped_model = accelerator.unwrap_model(unet_vton)
 
-        # New Code #
-        # Saves the whole/unpartitioned fp16 model when in ZeRO Stage-3 to the output directory if
-        # `stage3_gather_16bit_weights_on_model_save` is True in DeepSpeed Config file or
-        # `zero3_save_16bit_model` is True in DeepSpeed Plugin.
-        # For Zero Stages 1 and 2, models are saved as usual in the output directory.
-        # The model name saved is `pytorch_model.bin`
-        # accelerator.save(
-        #     unwrapped_model.state_dict(),
-        #     os.path.join("ootd_train_ds_sep_checkpoints", f"unet_vton-epoch{str(epoch)}.safetensors"),
-        # )
 
-        # unwrapped_model = accelerator.unwrap_model(unet_garm)
 
-        # accelerator.save(
-        #     unwrapped_model.state_dict(),
-        #     os.path.join("ootd_train_ds_sep_checkpoints", f"unet_garm-epoch{str(epoch)}.safetensors"),
-        # )
-
-        # # save pretrain
-        # accelerator.get_state_dict(unet_vton)
-        # unwrapped_model = accelerator.unwrap_model(unet_vton)
-        # save_fun = accelerator.save
-        # unwrapped_model.sve_pretrained(
-        #     "ootd_train_ds_pretrain",
-        #     is_main_process=accelerator.is_main_process,
-        #     save_function=save_fun
-        # )
 accelerator.end_training()
 # from safetensors.torch import save_file
 # save_file(unet_vton.to('cpu').state_dict(), "./unet_vton.safetensors")

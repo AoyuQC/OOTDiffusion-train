@@ -16,7 +16,7 @@ elif [[ "$gpu_info" == *"A10"* ]]; then
     echo "The GPU is an A10 GPU."
     /home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/anaconda3/envs/ootd/bin/accelerate launch /home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion-train/run/ootd_train.py --load_height 512 \
 	    --load_width 384 \
-	    --dataset_list '/home/ubuntu/dataset/aigc-app-vto/zalando-hd-resized/train_pairs_test.txt' \
+	    --dataset_list '/home/ubuntu/dataset/aigc-app-vto/zalando-hd-resized/train_pairs.txt' \
 	    --dataset_dir '/home/ubuntu/dataset/aigc-app-vto/zalando-hd-resized' \
 	    --dataset_mode 'train' \
 	    --train_batch_size 1 \
