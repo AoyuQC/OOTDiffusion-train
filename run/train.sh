@@ -7,8 +7,8 @@ if [[ "$gpu_info" == *"A100"* ]]; then
     echo "The GPU is an A100 GPU."
     /home/ec2-user/SageMaker/conda_env/ootd/bin/accelerate launch /home/ec2-user/SageMaker/vto/OOTDiffusion-train/run/ootd_train.py --load_height 512 \
 	    --load_width 384 \
-	    --dataset_list '/home/ec2-user/SageMaker/data/dataset/vto/train_pairs.txt' \
-	    --dataset_dir '/home/ec2-user/SageMaker/data/dataset/vto' \
+		--dataset_list '/home/ec2-user/SageMaker/data/dataset/vto/shenin/test_pairs_shein.txt' \
+		--dataset_dir '/home/ec2-user/SageMaker/data/dataset/vto/shenin' \
 	    --dataset_mode 'train' \
 	    --train_batch_size 16 \
 	    --num_train_epochs 1
@@ -26,6 +26,16 @@ else
     echo "GPU name: $gpu_info"
 fi
 
+# a100 backup
+# shein up data
+# --dataset_list '/home/ec2-user/SageMaker/data/dataset/vto/shenin/test_pairs_shein.txt' \
+# --dataset_dir '/home/ec2-user/SageMaker/data/dataset/vto/shenin' \
+
+# raw data
+# --dataset_list '/home/ec2-user/SageMaker/data/dataset/vto/train_pairs.txt' \
+# --dataset_dir '/home/ec2-user/SageMaker/data/dataset/vto' \
+
+# a10 backup
 # shein up data
 # --dataset_list '/home/ubuntu/dataset/aigc-app-vto/shenin/test_pairs_shein.txt' \
 # --dataset_dir '/home/ubuntu/dataset/aigc-app-vto/shenin' \
