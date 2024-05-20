@@ -7,6 +7,7 @@ import torch
 from torch.utils import data
 from torchvision import transforms
 import argparse
+import math
 
 
 
@@ -80,13 +81,18 @@ class VITONDataset(data.Dataset):
                        (parse_array == 18).astype(np.float32) +
                        (parse_array == 19).astype(np.float32))
 
-        r = 20
+        # r = 20
+        r = 10
         agnostic = img.copy()
         agnostic_draw = ImageDraw.Draw(agnostic)
 
         length_a = np.linalg.norm(pose_data[5] - pose_data[2])
         length_b = np.linalg.norm(pose_data[12] - pose_data[9])
         point = (pose_data[9] + pose_data[12]) / 2
+        if length_a == 0 or length_b == 0 or math.isnan(length_a) == True or math.isnan(length_b) == True:
+            print("invalid value")
+        else:
+            print("valid value")
         pose_data[9] = point + (pose_data[9] - point) / length_b * length_a
         pose_data[12] = point + (pose_data[12] - point) / length_b * length_a
 
@@ -179,6 +185,8 @@ class VITONDataset(data.Dataset):
             for label in labels[i][1]:
                 new_parse_agnostic_map[i] += parse_agnostic_map[label]
 
+        if img_name == '0000261.jpg':
+            print(f"case!!")
         # load person image
         img = Image.open(osp.join(self.data_path, 'image', img_name))
         img = transforms.Resize(self.load_width, interpolation=2)(img)
@@ -186,11 +194,16 @@ class VITONDataset(data.Dataset):
         img = self.transform(img)
         img_agnostic = self.transform(img_agnostic)  # [-1,1]
 
+        # load new mask image
+        new_img_agnostic = Image.open(osp.join(self.data_path, 'agnostic-v32', img_name))
+        new_img_agnostic = transforms.Resize(self.load_width, interpolation=2)(new_img_agnostic)
+        new_img_agnostic = self.transform(new_img_agnostic)
+
         result = {
             'img_name': img_name,
             'c_name': c_name,
             'img': img,
-            'img_agnostic': img_agnostic,
+            'img_agnostic': new_img_agnostic,
             'parse_agnostic': new_parse_agnostic_map,
             'pose': pose_rgb,
             'cloth': c,

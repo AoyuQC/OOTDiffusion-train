@@ -86,7 +86,7 @@ def get_opt():
         help="Number of updates steps to accumulate before performing a backward/update pass.",
     )
     parser.add_argument(
-        "--lr_scheduler",
+        "--lr_scheduler_type",
         type=str,
         default="constant",
         help=(
@@ -95,7 +95,7 @@ def get_opt():
         ),
     )
     parser.add_argument(
-        "--lr_warmup_steps", type=int, default=500, help="Number of steps for the warmup in the lr scheduler."
+        "--num_warmup_steps", type=int, default=500, help="Number of steps for the warmup in the lr scheduler."
     )
     parser.add_argument(
         "--max_train_steps",
@@ -336,7 +336,7 @@ if (
     )
 else:
     lr_scheduler = DummyScheduler(
-        optimizer, total_num_steps=args.max_train_steps, warmup_num_steps=args.lr_warmup_steps
+        optimizer, total_num_steps=args.max_train_steps, warmup_num_steps=args.num_warmup_steps
     )
 #######单机多卡
 # params_to_optimize = list(unet_garm.parameters())
