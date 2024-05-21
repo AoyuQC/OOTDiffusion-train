@@ -40,7 +40,7 @@ if device_name == 'NVIDIA A10G':
         vit_base_path = "/home/ubuntu/VTO/OOTDiffusion/checkpoints/clip-vit-large-patch14"
 elif device_name == 'NVIDIA A100-SXM4-40GB':
     # a100 instance
-    sys.path.append(r'/home/ubuntu/VTO/OOTDiffusion/ootd')
+    sys.path.append(r'/home/ec2-user/SageMaker/vto/OOTDiffusion/ootd')
     ootd_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--levihsu--OOTDiffusion/snapshots/c79f9dd0585743bea82a39261cc09a24040bc4f9/checkpoints/ootd"
     vit_base_path = "/home/ec2-user/SageMaker/hf_cache/hub/models--openai--clip-vit-large-patch14/snapshots/32bd64288804d66eefd0ccbe215aa642df71cc41"
 else:
