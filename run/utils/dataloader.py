@@ -1,4 +1,5 @@
 import json
+import os
 from os import path as osp
 
 import numpy as np
@@ -26,11 +27,19 @@ class VITONDataset(data.Dataset):
         # load data list
         img_names = []     #模特图片
         c_names = []       #服装图片
-        with open(osp.join(opt.dataset_dir, opt.dataset_list), 'r') as f:
-            for line in f.readlines():
-                img_name, c_name = line.strip().split()
-                img_names.append(img_name)
-                c_names.append(c_name)
+        # check whether dataset_list has different txt files
+        if os.path.isdir(opt.dataset_list):
+            dataset_lists = [f for f in os.listdir(opt.dataset_list) if f.endswith('.txt')]
+            dataset_lists = [os.path.join(opt.dataset_list,d) for d in dataset_lists]
+        else:
+            dataset_lists = [opt.dataset_list]
+
+        for dataset_list in dataset_lists:
+            with open(dataset_list, 'r') as f:
+                for line in f.readlines():
+                    img_name, c_name = line.strip().split()
+                    img_names.append(img_name)
+                    c_names.append(c_name)
 
         self.img_names = img_names    
         self.c_names = dict()

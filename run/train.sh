@@ -16,7 +16,7 @@ if [ "$variable" != "" ]; then
         "aoyu")
             a100_dataset_list='/home/ec2-user/SageMaker/data/dataset/vto/shenin/test_pairs_shein.txt' \
             a100_dataset_dir='/home/ec2-user/SageMaker/data/dataset/vto/shenin' \
-            a10_dataset_list='/home/ubuntu/dataset/aigc-app-vto/shenin/test_pairs_shein_debug.txt' \
+            a10_dataset_list='/home/ubuntu/dataset/aigc-app-vto/shenin/labels/6_model_label_experiment' \
             a10_dataset_dir='/home/ubuntu/dataset/aigc-app-vto/shenin' \
             ;;
         "xiaoyu")
@@ -48,13 +48,23 @@ if [[ "$gpu_info" == *"A100"* ]]; then
 	    --num_train_epochs 1
 elif [[ "$gpu_info" == *"A10"* ]]; then
     echo "The GPU is an A10 GPU."
-    /home/ubuntu/.local/bin/accelerate launch /home/ubuntu/VTO/OOTDiffusion-train/run/ootd_train.py --load_height 512 \
-	    --load_width 384 \
-	    --dataset_list $a10_dataset_list \
-	    --dataset_dir $a10_dataset_dir \
-	    --dataset_mode 'train' \
-	    --train_batch_size 16 \
-	    --num_train_epochs 10
+    if [ "$variable" == "aoyu" ]; then
+        /home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/anaconda3/envs/ootd/bin/accelerate launch /home/ubuntu/pytorch_gpu_base_ubuntu_uw2_workplace/aws-gcr-csdc-atl/aigc-vto-models/aigc-vto-models-ootd/reference/OOTDiffusion-train/run/ootd_train.py --load_height 512 \
+            --load_width 384 \
+            --dataset_list $a10_dataset_list \
+            --dataset_dir $a10_dataset_dir \
+            --dataset_mode 'train' \
+            --train_batch_size 16 \
+            --num_train_epochs 10
+    elif [[ "$variable" == "xiaoyu" ]]; then
+        /home/ubuntu/.local/bin/accelerate launch /home/ubuntu/VTO/OOTDiffusion-train/run/ootd_train.py --load_height 512 \
+            --load_width 384 \
+            --dataset_list $a10_dataset_list \
+            --dataset_dir $a10_dataset_dir \
+            --dataset_mode 'train' \
+            --train_batch_size 16 \
+            --num_train_epochs 10
+    fi
 else
     echo "The GPU is neither A10 nor A100."
     echo "GPU name: $gpu_info"
