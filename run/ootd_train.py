@@ -620,7 +620,7 @@ for epoch in tqdm(range(first_epoch, args.num_train_epochs)):
             util_adv_loss = torch.nn.functional.softplus(-sample[0]).mean() * 0 
             loss = F.mse_loss(noise_pred.float(), noise.float(), reduction="mean")+util_adv_loss
             
-            print(loss.item())
+            # print(loss.item())
 
             accelerator.backward(loss)
             optimizer.step()

@@ -54,7 +54,7 @@ elif [[ "$gpu_info" == *"A10"* ]]; then
             --dataset_list $a10_dataset_list \
             --dataset_dir $a10_dataset_dir \
             --dataset_mode 'train' \
-            --train_batch_size 16 \
+            --train_batch_size 8 \
             --num_train_epochs 10
     elif [[ "$variable" == "xiaoyu" ]]; then
         /home/ubuntu/.local/bin/accelerate launch /home/ubuntu/VTO/OOTDiffusion-train/run/ootd_train.py --load_height 512 \
