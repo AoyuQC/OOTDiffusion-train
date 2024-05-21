@@ -14,7 +14,7 @@ echo "The scenario of application is: $variable"
 if [ "$variable" != "" ]; then
     case "$variable" in
         "aoyu")
-            a100_dataset_list='/home/ec2-user/SageMaker/data/dataset/vto/shenin/test_pairs_shein.txt' \
+            a100_dataset_list='/home/ec2-user/SageMaker/data/dataset/vto/shenin/labels/6_model_label_experiment' \
             a100_dataset_dir='/home/ec2-user/SageMaker/data/dataset/vto/shenin' \
             a10_dataset_list='/home/ubuntu/dataset/aigc-app-vto/shenin/labels/6_model_label_experiment' \
             a10_dataset_dir='/home/ubuntu/dataset/aigc-app-vto/shenin' \
